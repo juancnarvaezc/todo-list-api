@@ -166,6 +166,10 @@ def buscar_categoria_route(nombre_categoria):
     tareas = buscar_categoria(nombre_categoria)
     return jsonify({"tasks": tareas})  # Envolver la lista en un diccionario
 
+@app.route('/')
+def home():
+    return {"message": "API funcionando correctamente en Render!"}
+
 if __name__ == '__main__':
     # Inicia la aplicación Flask
     app.run(host="0.0.0.0", port=5000)
