@@ -17,8 +17,14 @@ def inicializar_archivo(nombre_archivo):
     ruta_archivo = os.path.join(BASE_DIR, nombre_archivo)
     if not os.path.exists(ruta_archivo):
         with open(ruta_archivo, mode='w', encoding='utf-8') as file:
-            json.dump({"tasks": [], "categories": []}, file, ensure_ascii=False, indent=4)
-
+            json.dump({
+                "tasks": [], 
+                "categories": [
+                    {"name": "General"},
+                    {"name": "Trabajo"},
+                    {"name": "Personal"}
+                ]
+            }, file, ensure_ascii=False, indent=4)
 def leer_json(nombre_archivo):
     """Lee datos de un archivo JSON."""
     inicializar_archivo(nombre_archivo)
