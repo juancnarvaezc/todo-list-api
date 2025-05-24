@@ -17,14 +17,49 @@ def inicializar_archivo(nombre_archivo):
     ruta_archivo = os.path.join(BASE_DIR, nombre_archivo)
     if not os.path.exists(ruta_archivo):
         with open(ruta_archivo, mode='w', encoding='utf-8') as file:
-            json.dump({
-                "tasks": [], 
-                "categories": [
-                    {"name": "General"},
-                    {"name": "Trabajo"},
-                    {"name": "Personal"}
-                ]
-            }, file, ensure_ascii=False, indent=4)
+            json.dump({"tasks": [], "categories": ["General", "Trabajo", "Personal"]}, file, ensure_ascii=False, indent=4)
+
+def unir_archivos_y_borrar(origen, destino):
+    """Une el contenido de 'origen' al archivo 'destino' y elimina 'origen'."""
+    archivo_origen = os.path.join(BASE_DIR, f"{origen}.json")
+    archivo_destino = os.path.join(BASE_DIR, f"{destino}.json")
+
+    inicializar_archivo(f"{origen}.json")
+    inicializar_archivo(f"{destino}.json")
+
+    datos_origen = leer_json(f"{origen}.json")
+    datos_destino = leer_json(f"{destino}.json")
+
+    # Combinar tareas y eliminar duplicados por ID
+    tareas_origen = datos_origen.get("tasks", [])
+    tareas_destino = datos_destino.get("tasks", [])
+    tareas_combinadas = {t["id"]: t for t in tareas_destino}
+    for t in tareas_origen:
+        tareas_combinadas[t["id"]] = t
+    datos_destino["tasks"] = list(tareas_combinadas.values())
+
+    # Combinar categorías (evitar duplicados por nombre)
+    categorias_origen = datos_origen.get("categories", [])
+    categorias_destino = datos_destino.get("categories", [])
+    nombres_categorias = {c["name"] for c in categorias_destino}
+    for c in categorias_origen:
+        if c["name"] not in nombres_categorias:
+            categorias_destino.append(c)
+            nombres_categorias.add(c["name"])
+    datos_destino["categories"] = categorias_destino
+
+    # Guardar datos combinados en el archivo destino
+    with open(archivo_destino, 'w', encoding='utf-8') as f:
+        json.dump(datos_destino, f, ensure_ascii=False, indent=4)
+
+    # Eliminar archivo de origen
+    if os.path.exists(archivo_origen):
+        os.remove(archivo_origen)
+
+    return {"mensaje": f"Archivo '{origen}.json' fusionado con '{destino}.json' y eliminado."}
+
+
+
 def leer_json(nombre_archivo):
     """Lee datos de un archivo JSON."""
     inicializar_archivo(nombre_archivo)
@@ -176,6 +211,21 @@ def buscar_categoria_route(uuid, nombre_categoria):
     nombre_archivo = f"{uuid}.json"
     tareas = buscar_categoria(nombre_archivo, nombre_categoria)
     return jsonify({"tasks": tareas})
+
+@app.route('/unir_archivos', methods=['POST'])
+def unir_archivos():
+    data = request.json
+    origen = data.get("origen")  # sin ".json"
+    destino = data.get("destino")  # sin ".json"
+    
+    if not origen or not destino:
+        return jsonify({"mensaje": "Se requieren los campos 'origen' y 'destino'."}), 400
+
+    if origen == destino:
+        return jsonify({"mensaje": "Los archivos de origen y destino deben ser diferentes."}), 400
+
+    resultado = unir_archivos_y_borrar(origen, destino)
+    return jsonify(resultado)
 
 @app.route('/')
 def home():
