@@ -17,7 +17,14 @@ def inicializar_archivo(nombre_archivo):
     ruta_archivo = os.path.join(BASE_DIR, nombre_archivo)
     if not os.path.exists(ruta_archivo):
         with open(ruta_archivo, mode='w', encoding='utf-8') as file:
-            json.dump({"tasks": [], "categories": ["General", "Trabajo", "Personal"]}, file, ensure_ascii=False, indent=4)
+            json.dump({
+                "tasks": [],
+                "categories": [
+                    {"name": "General"},
+                    {"name": "Trabajo"},
+                    {"name": "Personal"}
+                ]
+            }, file, ensure_ascii=False, indent=4)
 
 def unir_archivos_y_borrar(origen, destino):
     """Une el contenido de 'origen' al archivo 'destino' y elimina 'origen'."""
@@ -57,8 +64,6 @@ def unir_archivos_y_borrar(origen, destino):
         os.remove(archivo_origen)
 
     return {"mensaje": f"Archivo '{origen}.json' fusionado con '{destino}.json' y eliminado."}
-
-
 
 def leer_json(nombre_archivo):
     """Lee datos de un archivo JSON."""
@@ -229,7 +234,7 @@ def unir_archivos():
 
 @app.route('/')
 def home():
-    return {"message": "API funcionando correctamente en Render!"}
+    return {"message": "API de gestión de tareas y categorías"}
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
